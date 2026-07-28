@@ -229,7 +229,12 @@ io.github.jan-guenter:allthemons-spawn-controller:0.1.0
 ```
 
 Repository:
-`https://github.com/jan-guenter/allthemons-spawn-controller`
+
+```text
+https://maven.pkg.github.com/jan-guenter/allthemons-spawn-controller
+```
+
+GitHub Packages consumers need normal GitHub package credentials.
 
 ## License
 
