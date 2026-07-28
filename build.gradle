@@ -1,0 +1,182 @@
+plugins {
+    id 'java-library'
+    id 'checkstyle'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.140'
+}
+
+group = mod_group_id
+version = mod_version
+
+base {
+    archivesName = repository_name
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    withSourcesJar()
+}
+
+neoForge {
+    version = neoforge_version
+
+    mods {
+        atmons_spawn_controller {
+            sourceSet sourceSets.main
+        }
+    }
+
+    runs {
+        server {
+            server()
+            gameDirectory = project.file('run/server')
+            programArgument '--nogui'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    def values = [
+        mod_id: mod_id,
+        mod_name: mod_name,
+        mod_version: mod_version
+    ]
+    inputs.properties(values)
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(values)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+}
+
+tasks.named('runServer', JavaExec).configure {
+    standardInput = System.in
+}
+
+checkstyle {
+    toolVersion = '10.18.2'
+    configFile = file('config/checkstyle/checkstyle.xml')
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jar {
+    manifest.attributes('MixinConfigs': 'atmons_spawn_controller.mixins.json')
+    from('LICENSE') {
+        rename { 'META-INF/LICENSE_atmons_spawn_controller' }
+    }
+}
+
+def productionJar = tasks.named('jar', Jar).flatMap { it.archiveFile }
+
+tasks.register('verifyProductionJar') {
+    group = 'verification'
+    description = 'Checks the production JAR layout and server-only surface.'
+    dependsOn tasks.named('jar')
+    inputs.file(productionJar)
+
+    doLast {
+        def jarFile = inputs.files.singleFile
+        def entries = []
+        new java.util.zip.ZipFile(jarFile).withCloseable { archive ->
+            archive.entries().each { entry ->
+                entries.add(entry.name)
+            }
+        }
+        def requiredSuffixes = [
+            'META-INF/neoforge.mods.toml',
+            'atmons_spawn_controller.mixins.json',
+            'AllTheMonsSpawnController.class',
+            'NaturalSpawnerMixin.class'
+        ]
+        requiredSuffixes.each { suffix ->
+            if (!entries.any { it.endsWith(suffix) }) {
+                throw new GradleException("Production JAR is missing ${suffix}")
+            }
+        }
+        def forbidden = entries.findAll {
+            it.startsWith('net/minecraft/client/')
+                    || it.contains('/net/minecraft/client/')
+                    || it.endsWith('-sources.jar')
+                    || it.startsWith('assets/')
+                    || it.contains('/assets/')
+                    || it.startsWith('META-INF/jarjar/')
+                    || it.contains('/META-INF/jarjar/')
+                    || it.endsWith('.jar')
+                    || (it.endsWith('.class')
+                    && !it.startsWith('io/github/janguenter/allthemons/spawncontroller/'))
+        }
+        if (!forbidden.isEmpty()) {
+            throw new GradleException("Server-only JAR has forbidden entries: ${forbidden}")
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyProductionJar')
+}
+
+publishing {
+    publications {
+        mod(MavenPublication) {
+            from components.java
+            artifactId = repository_name
+
+            pom {
+                name = mod_name
+                description = 'Early natural-spawn category policy controller for All the Mons servers'
+                url = 'https://github.com/jan-guenter/allthemons-spawn-controller'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://opensource.org/license/mit'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'jan-guenter'
+                        name = 'Jan Guenter'
+                        url = 'https://github.com/jan-guenter'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/jan-guenter/allthemons-spawn-controller.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/jan-guenter/allthemons-spawn-controller.git'
+                    url = 'https://github.com/jan-guenter/allthemons-spawn-controller'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/jan-guenter/allthemons-spawn-controller')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR')
+                password = System.getenv('GITHUB_TOKEN')
+            }
+        }
+    }
+}
