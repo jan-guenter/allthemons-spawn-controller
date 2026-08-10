@@ -16,7 +16,7 @@ config = "atmons_spawn_controller.mixins.json"
 [[dependencies.${mod_id}]]
 modId = "neoforge"
 type = "required"
-versionRange = "[21.1.234,21.2)"
+versionRange = "[21.1.248,21.2)"
 ordering = "NONE"
 side = "SERVER"
 

@@ -12,19 +12,19 @@ hooks. Players do not install it.
 
 | Component | Inspected target |
 | --- | --- |
-| All the Mons | `1.1.1` |
+| All the Mons | `1.2.0` |
 | Minecraft | `1.21.1` |
-| NeoForge | `21.1.234` |
+| NeoForge | `21.1.248` |
 | Java | `21` |
 | Aquaculture | `2.7.21` |
 | Cobblemon | `1.7.3+1.21.1` |
 | Fight or Flight | `0.10.9` |
-| All The Mons core | `0.3.0` |
+| All The Mons core | `0.5.0` |
 | InControl | `1.21-10.2.6` |
 | KubeJS | `2101.7.2-build.368` |
 
 The metadata deliberately requires Minecraft `[1.21.1,1.21.2)` and NeoForge
-`[21.1.234,21.2)`. Treat another pack or platform version as unverified until
+`[21.1.248,21.2)`. Treat another pack or platform version as unverified until
 the update procedure in `AGENTS.md` has been completed.
 
 ## Policies
@@ -160,11 +160,13 @@ Cobblemon 1.7.3 ticks its own per-player `PlayerSpawner`, builds a
 targets that code nor classifies Pokémon by `MobCategory`, including aquatic
 Pokémon.
 
-The exact Fight or Flight 0.10.9 and All The Mons core 0.3.0 Mixin lists do not
-target `NaturalSpawner`. InControl 1.21-10.2.6 evaluates NeoForge position,
-finalize, and entity-join events later in the spawn lifecycle. The pack's
-current `config/incontrol/spawn.json` squid denial remains useful in `stock`
-mode and as a late guard.
+The exact Fight or Flight 0.10.9 and All The Mons core 0.5.0 Mixin lists do not
+target `NaturalSpawner`. Artifacts and The Bumblezone do target its separate
+six-argument `spawnCategoryForPosition` method; they do not overlap this
+controller's `spawnForChunk` invocation wrappers. InControl 1.21-10.2.6
+evaluates NeoForge position, finalize, and entity-join events later in the
+spawn lifecycle. The pack's current `config/incontrol/spawn.json` squid denial
+remains useful in `stock` mode and as a late guard.
 
 More evidence and hashes are recorded in
 [`docs/compatibility-evidence.md`](docs/compatibility-evidence.md).
@@ -225,7 +227,7 @@ creates SHA-256 checksums, and creates a GitHub Release.
 Changes are recorded in [`CHANGELOG.md`](CHANGELOG.md).
 
 ```text
-io.github.jan-guenter:allthemons-spawn-controller:0.1.0
+io.github.jan-guenter:allthemons-spawn-controller:0.1.1
 ```
 
 Repository:

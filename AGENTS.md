@@ -22,20 +22,20 @@ for All the Mons. Preserve these invariants:
 
 | Component | Version |
 | --- | --- |
-| All the Mons | `1.1.1` |
-| Pack commit | `94a224acf6eace3edf7ea64e6033b458f5bda288` |
+| All the Mons | `1.2.0` |
+| Pack commit | `c7bb230f21d14d26859d0b92548f089b3a493ad9` |
 | Minecraft | `1.21.1` |
-| NeoForge | `21.1.234` |
+| NeoForge | `21.1.248` |
 | Java | `21` |
 | Aquaculture | `2.7.21` |
 | Cobblemon | `1.7.3+1.21.1` |
 | Fight or Flight | `0.10.9` |
-| All The Mons core | `0.3.0` |
+| All The Mons core | `0.5.0` |
 | InControl | `1.21-10.2.6` |
 | KubeJS | `2101.7.2-build.368` |
 
 Hard dependency ranges are Minecraft `[1.21.1,1.21.2)` and NeoForge
-`[21.1.234,21.2)`. Do not widen them based only on compilation.
+`[21.1.248,21.2)`. Do not widen them based only on compilation.
 
 ## Exact Mixin contract
 
@@ -128,8 +128,14 @@ startup/reload. Never add an in-memory timer here.
 - Cobblemon commit `e6fda6137e00cfe6035c863a3736ba30fc236696`
   ticks `PlayerSpawner` from `ServerPlayerMixin` and uses
   `SpawningZoneInput`, separately from `NaturalSpawner`.
-- Fight or Flight 0.10.9 and All The Mons core 0.3.0 required Mixin lists do
-  not target `NaturalSpawner`.
+- Fight or Flight 0.10.9 and All The Mons core 0.5.0 required Mixin lists do
+  not target `NaturalSpawner`. The coremod's new 0.5.0 Mixins are confined to
+  pasture recovery and Create rotation propagation; its existing biome-
+  modifier Mixin is byte-for-byte unchanged from 0.3.0.
+- Artifacts 13.2.1 and The Bumblezone 7.15.3 target the separate
+  six-argument `NaturalSpawner.spawnCategoryForPosition` method. They do not
+  overlap either `spawnForChunk` invocation wrapped here. Keep proving this
+  separation with a whole-pack JAR scan and full-pack startup on each update.
 - InControl 1.21-10.2.6 handles NeoForge position/finalize/join events after
   the early gate. Keep it as a late population guard. The locked pack rule
   denies `minecraft:squid`.
